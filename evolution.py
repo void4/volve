@@ -34,8 +34,9 @@ def output(x, y, value):
     pixelvalue[rgbindex] = value
     pixelvalue = tuple(pixelvalue)
 
-    if rgbindex == 2:
-        colorcounter[pixelvalue] += 1
+    colorcounter[str((x,y))] += 1
+    #if rgbindex == 2:
+    #    colorcounter[pixelvalue] += 1
 
     img.putpixel((x,y), pixelvalue)
 

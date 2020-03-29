@@ -24,7 +24,17 @@ def execute(output, state):
 	# Runtime stack for data manipulation
 	stack = []
 
+	start_steps = state[F_GAS]
+
 	while True:
+
+		# Assuming no refills
+		steps_done = start_steps - state[F_GAS]
+
+		# pseudo-gravity
+		if steps_done % 5 == 0:
+			if state[F_Y] < H-1:
+				state[F_Y] = (state[F_Y]+1)%H
 
 		# Uncomment this to see the program state and stack each step
 		#print("STATE:", state)
@@ -78,7 +88,9 @@ def execute(output, state):
 		elif instruction == I_MOVE:
 			move = MOVES[state[F_R]]
 			state[F_X] = (state[F_X] + move[0])%W
-			state[F_Y] = (state[F_Y] + move[1])%H
+			newy = (state[F_Y] + move[1])
+			if newy < H:
+				state[F_Y] = newy%H
 		# Move the instruction pointer one step forward to point to the next instruction
 		state[F_IP] += 1
 
@@ -89,7 +101,7 @@ def execute(output, state):
 		#print("")
 
 def code_to_state(code):
-	return [STARTGAS, 0, 0, 0, 0, code]
+	return [STARTGAS, 0, randint(0,W-1), H-1, 0, code]
 
 def random_instruction():
 	instr = randint(0, NUMINSTR-1)
