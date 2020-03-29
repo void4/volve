@@ -2,14 +2,13 @@ import os
 from time import time
 from random import random
 from collections import Counter
+from tempfile import TemporaryFile
 
 from PIL import Image, ImageDraw
 
-from vm import execute, generate_random, mutate
+from vm import execute, generate_random, mutate, F_GAS, W, H
 
-W = H = 64
-
-SCALE = 4
+SCALE = 2
 
 img = Image.new("RGB", (W,H))
 
@@ -21,13 +20,13 @@ IMAGEDIR = "results"
 
 os.makedirs(IMAGEDIR, exist_ok=True)
 
-def output(value):
+def output(x, y, value):
     global img, index
 
     pixel = index // 3
 
-    x = pixel % W
-    y = pixel // W
+    x = x#pixel % W
+    y = y#pixel // W
 
     rgbindex = index % 3
 
@@ -43,6 +42,14 @@ def output(value):
     index += 1
 
     if index//3 >= W*H:
+
+        tmpfile = TemporaryFile()
+        img.save(tmpfile, "png")
+        compressed_imgbytes = tmpfile.tell()
+        imgbytes = W*H*3
+        ratio = compressed_imgbytes/imgbytes
+        print("Result .png compression ratio:", ratio)
+
         img = img.resize((W*SCALE, H*SCALE))
         img.save(IMAGEDIR + "/" + str(int(time()*1000))+".png")
         exit(0)
@@ -60,14 +67,21 @@ def evolve():
             state = queue.pop(0)
         else:
             state = generate_random()
+
+        startgas = state[F_GAS]
+
         execute(output, state)
 
         diffcolors = len(colorcounter)
 
-        if best is None or diffcolors > pool[best]:
-            print("New best: ", diffcolors)
+        gasdelta = state[F_GAS] - startgas
+
+        score = diffcolors - gasdelta
+
+        if best is None or score > pool[best]:
+            print("New best: ", score)
             key = str(state)
-            pool[key] = diffcolors
+            pool[key] = score
             best = key
 
             for i in range(10):

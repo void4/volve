@@ -1,16 +1,23 @@
 from random import randint
 from copy import deepcopy
 
+W = H = 256
+
 # Instruction numbers
-NUMINSTR = 4
-PUSH, ADD, PRINT, JUMP = range(NUMINSTR)
+NUMINSTR = 9
+PUSH, ADD, PRINT, JUMP, SUB, I_IP, I_LEFT, I_RIGHT, I_MOVE = range(NUMINSTR)
 
 CELL_SIZE = 256
 CELL_MAX = CELL_SIZE-1
 CELL_MIN = 0
 
 # indexes of the state components
-STEPS, IP, CODE = range(3)
+NUMFIELDS = 6
+F_GAS, F_IP, F_X, F_Y, F_R, F_CODE = range(NUMFIELDS)
+
+MOVES = [[0,1], [-1,0], [0,-1], [1,0]]
+
+STARTGAS = 1024
 
 def execute(output, state):
 
@@ -23,16 +30,16 @@ def execute(output, state):
 		#print("STATE:", state)
 		#print("STACK:", stack)
 
-		steps = state[STEPS]
-		ip = state[IP]
-		code = state[CODE]
+		steps = state[F_GAS]
+		ip = state[F_IP]
+		code = state[F_CODE]
 
 		# We are out of steps, stop the process
 		if steps <= 0:
 			break
 
 		# No instructions are left, stop the process
-		if ip >= len(code):
+		if ip >= len(code) or ip < 0:
 			break
 
 		if len(code[ip]) == 2:
@@ -50,28 +57,39 @@ def execute(output, state):
 			# Pop the two topmost elements from the stack, add them and push the result back on the stack
 			if len(stack) >= 2:
 				stack.append(stack.pop(-1) + stack.pop(-1))
+		elif instruction == SUB:
+			# Pop the two topmost elements from the stack, subtract them and push the result back on the stack
+			if len(stack) >= 2:
+				stack.append(stack.pop(-1) - stack.pop(-1))
 		elif instruction == PRINT:
 			# Pop the topmost element from the stack and print it
 			#print("OUTPUT:", stack.pop(-1))
 			if len(stack) >= 1:
-				output(stack.pop(-1))
+				output(state[F_X], state[F_Y], stack.pop(-1))
 		elif instruction == JUMP:
 			if len(stack) >= 1:
-				state[IP] = stack.pop(-1)
-
+				state[F_IP] = stack.pop(-1)
+		elif instruction == I_IP:
+			stack.append(ip)
+		elif instruction == I_LEFT:
+			state[F_R] = (state[F_R]-1)%4
+		elif instruction == I_RIGHT:
+			state[F_R] = (state[F_R]+1)%4
+		elif instruction == I_MOVE:
+			move = MOVES[state[F_R]]
+			state[F_X] = (state[F_X] + move[0])%W
+			state[F_Y] = (state[F_Y] + move[1])%H
 		# Move the instruction pointer one step forward to point to the next instruction
-		state[IP] += 1
+		state[F_IP] += 1
 
 		# Reduce the number of remaining steps by one
-		state[STEPS] -= 1
+		state[F_GAS] -= 1
 
 		# Print a newline after each iteration
 		#print("")
 
-STARTGAS = 256
-
 def code_to_state(code):
-	return [STARTGAS, 0, code]
+	return [STARTGAS, 0, 0, 0, 0, code]
 
 def random_instruction():
 	instr = randint(0, NUMINSTR-1)
@@ -89,7 +107,7 @@ def generate_random():
 	return code_to_state(code)
 
 def mutate(state):
-	code = deepcopy(state[CODE])
+	code = deepcopy(state[F_CODE])
 	for i in range(len(code)//10):
 		random_index = randint(0, len(code)-1)
 		code[random_index] = random_instruction()
@@ -99,6 +117,6 @@ def mutate(state):
 if __name__ == "__main__":
 	# full runtime state of a process
 	# number of remaining steps, instruction pointer, instruction list
-	state_example = [100, 0, [[PUSH, 1], [PUSH, 2], [ADD], [PRINT], [JUMP]]]
+	state_example = [100, 0, 0, 0, 0, [[PUSH, 1], [PUSH, 2], [ADD], [PRINT], [JUMP]]]
 
 	execute(state_example)
