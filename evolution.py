@@ -85,5 +85,6 @@ def evolve():
             pool[key] = score
             best = key
 
-            for i in range(10):
-                queue.append(mutate(state))
+            for i in range(30):
+                if random() < len(queue)/50:
+                    queue.append(mutate(state))

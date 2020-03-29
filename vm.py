@@ -32,7 +32,7 @@ def execute(output, state):
 		steps_done = start_steps - state[F_GAS]
 
 		# pseudo-gravity
-		if steps_done % 5 == 0:
+		if steps_done % 20 == 0:
 			if state[F_Y] < H-1:
 				state[F_Y] = (state[F_Y]+1)%H
 
