@@ -1,12 +1,12 @@
 import os
 from time import time
-from random import random
+from random import random, choice
 from collections import Counter
 from tempfile import TemporaryFile
 
 from PIL import Image, ImageDraw
 
-from vm import execute, generate_random, mutate, F_GAS, W, H
+from vm import execute, generate_random, mutate, F_GAS, W, H, splice
 
 SCALE = 2
 
@@ -80,11 +80,15 @@ def evolve():
         score = diffcolors - gasdelta
 
         if best is None or score > pool[best]:
-            print("New best: ", score)
+            print("New best: ", score, "Queue length: ", len(queue))
             key = str(state)
             pool[key] = score
             best = key
 
-            for i in range(30):
-                if random() < len(queue)/50:
-                    queue.append(mutate(state))
+            for i in range(50):
+                if random() > len(queue)/50:
+                    if len(queue) > 0:
+                        other = choice(queue)
+                    else:
+                        other = generate_random()
+                    queue.append(mutate(splice(other, state)))

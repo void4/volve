@@ -1,4 +1,4 @@
-from random import randint
+from random import randint, choice
 from copy import deepcopy
 
 W = H = 256
@@ -32,9 +32,11 @@ def execute(output, state):
 		steps_done = start_steps - state[F_GAS]
 
 		# pseudo-gravity
+		"""
 		if steps_done % 20 == 0:
 			if state[F_Y] < H-1:
 				state[F_Y] = (state[F_Y]+1)%H
+		"""
 
 		# Uncomment this to see the program state and stack each step
 		#print("STATE:", state)
@@ -101,7 +103,7 @@ def execute(output, state):
 		#print("")
 
 def code_to_state(code):
-	return [STARTGAS, 0, randint(0,W-1), H-1, 0, code]
+	return [STARTGAS, 0, randint(0,W-1), randint(0,H-1), 0, code]
 
 def random_instruction():
 	instr = randint(0, NUMINSTR-1)
@@ -124,6 +126,14 @@ def mutate(state):
 		random_index = randint(0, len(code)-1)
 		code[random_index] = random_instruction()
 	# Replenish, reset
+	return code_to_state(code)
+
+def splice(state1, state2):
+	code1 = deepcopy(state1[F_CODE])
+	code2 = deepcopy(state2[F_CODE])
+	index = randint(0, min(len(code1), len(code2))-1)
+	first, second = (code1, code2) if randint(0,1) == 0 else (code2, code1)
+	code = first[:index] + second[index:]
 	return code_to_state(code)
 
 if __name__ == "__main__":
