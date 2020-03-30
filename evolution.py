@@ -6,7 +6,7 @@ from tempfile import TemporaryFile
 
 from PIL import Image, ImageDraw
 
-from vm import execute, generate_random, mutate, F_GAS, W, H, splice
+from vm import execute, generate_random, mutate, F_GAS, W, H, splice, F_X, F_Y, F_R
 
 SCALE = 2
 
@@ -77,7 +77,7 @@ def evolve():
 
         gasdelta = state[F_GAS] - startgas
 
-        score = diffcolors - gasdelta
+        score = diffcolors# - gasdelta
 
         if best is None or score > pool[best]:
             print("New best: ", score, "Queue length: ", len(queue))
@@ -91,4 +91,9 @@ def evolve():
                         other = choice(queue)
                     else:
                         other = generate_random()
-                    queue.append(mutate(splice(other, state)))
+
+                    newstate = mutate(splice(other, state))
+                    newstate[F_X] = state[F_X]
+                    newstate[F_Y] = state[F_Y]
+                    newstate[F_R] = state[F_R]
+                    queue.append(newstate)

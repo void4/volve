@@ -4,8 +4,8 @@ from copy import deepcopy
 W = H = 256
 
 # Instruction numbers
-NUMINSTR = 9
-PUSH, ADD, PRINT, JUMP, SUB, I_IP, I_LEFT, I_RIGHT, I_MOVE = range(NUMINSTR)
+NUMINSTR = 10
+PUSH, ADD, PRINT, JUMP, SUB, I_IP, I_LEFT, I_RIGHT, I_MOVE, I_RANDOM = range(NUMINSTR)
 
 CELL_SIZE = 256
 CELL_MAX = CELL_SIZE-1
@@ -93,6 +93,8 @@ def execute(output, state):
 			newy = (state[F_Y] + move[1])
 			if newy < H:
 				state[F_Y] = newy%H
+		elif instruction == I_RANDOM:
+			stack.append(randint(0,255))
 		# Move the instruction pointer one step forward to point to the next instruction
 		state[F_IP] += 1
 
